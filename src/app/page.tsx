@@ -1,95 +1,52 @@
-import Image from 'next/image'
-import styles from './page.module.css'
+import "./page.module.css";
+import ListCardContainer from "@/component/card-list/ListCardContainer";
+import { createCardList } from "@/function/card-list";
+import { getUser } from "@/db/provider";
 
-export default function Home() {
-  return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>src/app/page.tsx</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
+async function getFavoriteList(userId: string) {
+    const db = await getUser();
+    const user = await db.getUser(userId);
+    return user.favorite;
+}
 
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
+export default async function Home() {
+    const favorite = await getFavoriteList("1");
 
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
+    const leagues = favorite.leagues.map(league => ({
+        name: league.name, img: league.logo, href: `/league/${league.id}`
+    }));
+    const leagueCards = createCardList([
+        ...leagues,
+        { name: "add", href: "#" }
+    ]);
 
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
+    const teams = favorite.teams.map(team => ({
+        name: team.name, img: team.logo, href: `/team/${team.id}`
+    }));
+    const teamCards = createCardList([
+        ...teams,
+        { name: "add", href: "#" }
+    ]);
 
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore starter templates for Next.js.</p>
-        </a>
+    return (
+        <>
+            <div id="title" className="text-center" style={{
+                marginTop: "5rem",
+                marginBlock: "5rem"
+            }}>
+                <h1 className="display-1">EZports</h1>
+                <h2 className="text-body-secondary">(대충 캐치프레이즈 영역)</h2>
+            </div>
 
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  )
+            <div style={{ marginBottom: "4rem" }}>
+                <h2 style={{ marginBottom: "1rem" }}>Favorite Leagues/Contests</h2>
+                <ListCardContainer cards={leagueCards}/>
+            </div>
+
+            <div style={{ marginBottom: "4rem" }}>
+                <h2 style={{ marginBottom: "1rem" }}>Favorite Teams</h2>
+                <ListCardContainer cards={teamCards}/>
+            </div>
+        </>
+    );
 }
